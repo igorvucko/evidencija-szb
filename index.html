@@ -744,16 +744,27 @@
           `;
           break;
 
-        case 'datum':
+        case 'datum': {
+          // type=date/time daju kalendar i biranje sata; vrijednost je ISO (YYYY-MM-DD) i HH:MM
+          let datumVal = currentRecord.datum || '';
+          if (datumVal && /^\d{1,2}\.\d{1,2}\.\d{4}/.test(datumVal)) {
+            const iso = parseDatumToISO(datumVal);
+            if (iso) datumVal = iso;
+          }
+          let vrijemeVal = formatVrijemeHR(currentRecord.vrijeme) || currentRecord.vrijeme || '';
+          if (vrijemeVal && !/^\d{2}:\d{2}/.test(vrijemeVal)) {
+            vrijemeVal = parseVrijeme(vrijemeVal) || '';
+          }
           content.innerHTML = `
             <label for="datum">Datum primjene *</label>
-            <input type="text" id="datum" value="${escapeAttr(formatDatumHR(currentRecord.datum) || currentRecord.datum || '')}" placeholder="npr. 13.10.2026" inputmode="numeric">
-            <p class="help" style="margin-top:-10px;margin-bottom:14px">Hrvatski oblik: <strong>dan.mjesec.godina</strong> (npr. 13.10.2026)</p>
+            <input type="date" id="datum" value="${escapeAttr(datumVal)}" lang="hr-HR">
+            <p class="help" style="margin-top:-10px;margin-bottom:14px">Odaberite datum iz kalendara. U listi i Excelu prikazuje se hrvatski (npr. 13.10.2026.)</p>
             <label for="vrijeme">Početak primjene (sat) – opcionalno</label>
-            <input type="text" id="vrijeme" value="${escapeAttr(formatVrijemeHR(currentRecord.vrijeme) || currentRecord.vrijeme || '')}" placeholder="npr. 14:45" inputmode="numeric">
-            <p class="help" style="margin-top:-10px">24-satni oblik: <strong>sati:minute</strong> (npr. 14:45) – bez AM/PM</p>
+            <input type="time" id="vrijeme" value="${escapeAttr(vrijemeVal)}" lang="hr-HR" step="60">
+            <p class="help" style="margin-top:-10px">Odaberite sat i minute (24-satni prikaz na većini uređaja u HR)</p>
           `;
           break;
+        }
 
         case 'doza':
           content.innerHTML = `
@@ -863,12 +874,9 @@
         currentRecord.naziv = document.getElementById('naziv').value.trim();
         currentRecord.regBroj = document.getElementById('regBroj').value.trim();
       } else if (step === 'datum') {
-        const rawD = document.getElementById('datum').value.trim();
-        const rawV = document.getElementById('vrijeme').value.trim();
-        const iso = parseDatumToISO(rawD);
-        currentRecord.datum = iso || rawD; // prefer ISO for sorting
-        currentRecord.vrijeme = parseVrijeme(rawV) || rawV;
-        currentRecord._datumRaw = rawD;
+        // type=date → YYYY-MM-DD; type=time → HH:MM
+        currentRecord.datum = document.getElementById('datum').value.trim();
+        currentRecord.vrijeme = document.getElementById('vrijeme').value.trim();
       } else if (step === 'doza') {
         currentRecord.doza = document.getElementById('doza').value.trim();
       } else if (step === 'lokacija') {
@@ -895,22 +903,14 @@
       }
 
       if (step === 'datum') {
-        const rawD = document.getElementById('datum').value.trim();
-        const iso = parseDatumToISO(rawD);
+        const iso = document.getElementById('datum').value.trim();
         if (!iso) {
-          alert('Unesite datum u hrvatskom obliku: dan.mjesec.godina\n(npr. 13.10.2026)');
+          alert('Odaberite datum primjene iz kalendara.');
           return false;
         }
         currentRecord.datum = iso;
-        const rawV = document.getElementById('vrijeme').value.trim();
-        if (rawV) {
-          const v = parseVrijeme(rawV);
-          if (!v) {
-            alert('Vrijeme unesite u 24-satnom obliku: sati:minute\n(npr. 14:45) – bez AM/PM');
-            return false;
-          }
-          currentRecord.vrijeme = v;
-        }
+        const v = document.getElementById('vrijeme').value.trim();
+        if (v) currentRecord.vrijeme = v;
         const d = new Date(iso + 'T12:00:00');
         const today = new Date();
         today.setHours(23, 59, 59, 999);
