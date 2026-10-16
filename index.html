@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#2e7d32">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Evidencija SZB – Jednostavno vođenje</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root {
+      --primary: #2e7d32;
+      --primary-dark: #1b5e20;
+      --primary-light: #e8f5e9;
+      --accent: #ff8f00;
+      --bg: #f5f7f5;
+      --card: #ffffff;
+      --text: #1a1a1a;
+      --muted: #5f6368;
+      --border: #dadce0;
+      --danger: #c62828;
+      --success: #2e7d32;
+      --radius: 16px;
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding-bottom: 100px;
+    }
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      padding: 16px 20px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+    .header h1 { font-size: 1.25rem; font-weight: 700; }
+    .header p { font-size: 0.85rem; opacity: 0.9; margin-top: 4px; }
+    .progress-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 3px;
+      margin-top: 14px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #a5d6a7;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+    .container { max-width: 560px; margin: 0 auto; padding: 16px; }
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .card h2 { font-size: 1.15rem; margin-bottom: 8px; color: var(--primary-dark); }
+    .card .help { font-size: 0.9rem; color: var(--muted); margin-bottom: 16px; }
+    label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    input[type="text"], input[type="date"], input[type="time"], input[type="number"], select, textarea {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 1.05rem;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      margin-bottom: 16px;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform 0.1s, background 0.2s;
+      text-decoration: none;
+      color: white;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--primary); }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: #546e7a; }
+    .btn-accent { background: var(--accent); }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+    }
+    .btn-danger { background: var(--danger); }
+    .btn-sm { padding: 10px 14px; font-size: 0.95rem; width: auto; }
+    .btn-row { display: flex; gap: 12px; margin-top: 8px; }
+    .btn-row .btn { flex: 1; }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .record-item {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .record-item .info { flex: 1; min-width: 0; }
+    .record-item .title { font-weight: 600; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .record-item .meta { font-size: 0.85rem; color: var(--muted); }
+    .big-choice {
+      display: block;
+      width: 100%;
+      padding: 18px 16px;
+      margin-bottom: 10px;
+      text-align: left;
+      background: var(--primary-light);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .big-choice:hover, .big-choice.selected {
+      border-color: var(--primary);
+      background: #c8e6c9;
+    }
+    .search-box {
+      position: relative;
+      margin-bottom: 12px;
+    }
+    .search-box input {
+      margin-bottom: 0;
+      padding-left: 44px;
+    }
+    .search-box::before {
+      content: "🔍";
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.1rem;
+    }
+    .dropdown-list {
+      max-height: 280px;
+      overflow-y: auto;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: white;
+      display: none;
+    }
+    .dropdown-list.show { display: block; }
+    .dropdown-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .dropdown-item:hover, .dropdown-item:active { background: var(--primary-light); }
+    .dropdown-item:last-child { border-bottom: none; }
+    .photo-area {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 16px;
+      background: #fafafa;
+    }
+    .photo-area img {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    .ocr-status {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin: 8px 0;
+      min-height: 24px;
+    }
+    .ocr-status.working { color: var(--accent); }
+    .ocr-status.done { color: var(--success); }
+    .footer-actions {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+      z-index: 90;
+    }
+    .footer-actions .btn-row { margin: 0; }
+    .badge {
+      display: inline-block;
+      background: var(--primary);
+      color: white;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-left: 6px;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+    }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+    .info-box {
+      background: #e3f2fd;
+      border-left: 4px solid #1976d2;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+    }
+    .warning-box {
+      background: #fff8e1;
+      border-left: 4px solid #ff8f00;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+    }
+    .tip-box {
+      background: #f1f8e9;
+      border-left: 4px solid #7cb342;
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.88rem;
+      color: #33691e;
+      margin-bottom: 14px;
+      line-height: 1.45;
+    }
+    .tip-box strong { color: #1b5e20; }
+    .field-error {
+      color: #c62828;
+      font-size: 0.85rem;
+      margin: -10px 0 12px;
+      display: none;
+    }
+    .field-error.show { display: block; }
+    input.invalid, select.invalid {
+      border-color: #c62828 !important;
+    }
+    .step-indicator {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .hidden { display: none !important; }
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255,255,255,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 4px solid #e0e0e0;
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="loading" class="loading-overlay">
+    <div class="spinner"></div>
+    <div>Učitavanje podataka…</div>
+  </div>
+  <script>
+    // Ako se glavni skript zaglavi, makni spinner nakon 2 sekunde
+    setTimeout(function(){
+      var el = document.getElementById('loading');
+      if (el) el.style.display = 'none';
+    }, 2000);
+  </script>
+
+  <div class="header">
+    <h1>📋 Evidencija SZB</h1>
+    <p>Jednostavno vođenje evidencije sredstava za zaštitu bilja</p>
+    <div class="progress-bar" id="progressBar" style="display:none">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- SCREEN: Welcome -->
+    <div id="screen-welcome" class="screen active">
+      <div class="card">
+        <h2>Dobrodošli!</h2>
+        <p class="help">Ova aplikacija pomaže vam jednostavno voditi evidenciju o uporabi sredstava za zaštitu bilja – pitanje po pitanje, bez potrebe za Excelom.</p>
+        <div class="info-box">
+          <strong>Važno od 2027.</strong><br>
+          Profesionalni korisnici moraju voditi evidenciju u elektroničkom (strojno čitljivom) obliku. Do 1. siječnja 2027. postoji prijelazno razdoblje.
+        </div>
+        <div class="warning-box">
+          <strong>Privatnost:</strong> Svi podaci ostaju <strong>samo na vašem uređaju</strong> (preglednik). Ništa se ne šalje na server. Preuzmite Excel kako biste sačuvali ili predali evidenciju.
+        </div>
+        <div class="info-box">
+          <strong>Odricanje odgovornosti:</strong> Ovo je pomoćni alat za unos. Vi ste odgovorni za točnost podataka i predaju nadležnim tijelima u skladu s propisima.
+        </div>
+        <button class="btn btn-primary" onclick="goTo('user')">Započni →</button>
+      </div>
+      <div class="card">
+        <h2>Kako radi?</h2>
+        <p class="help">1. Unesite svoje podatke<br>2. Dodajte svaku primjenu sredstva korak po korak<br>3. Po želji snimite etiketu – aplikacija će pokušati pročitati naziv<br>4. Preuzmite gotovu Excel tablicu</p>
+      </div>
+      <div class="card">
+        <h2>Sigurnost</h2>
+        <p class="help">• Koristite HTTPS adresu aplikacije<br>• Ne dijelite uređaj s tuđim podacima u pregledniku<br>• Nakon unosa preuzmite Excel (sigurnosna kopija)<br>• OCR i Excel biblioteke učitavaju se s pouzdanog CDN-a (jsDelivr) samo kad zatrebaju</p>
+      </div>
+    </div>
+
+    <!-- SCREEN: User data -->
+    <div id="screen-user" class="screen">
+      <div class="card">
+        <h2>Vaši podaci</h2>
+        <p class="help">Ovi podaci se upisuju u zaglavlje evidencije.</p>
+        <div class="tip-box">
+          <strong>Savjet:</strong> Unesite ime i prezime onako kako ste registrirani (npr. u ARKOD-u ili na računu). OIB je osobni identifikacijski broj od 11 znamenaka.
+        </div>
+        <label for="userName">Ime i prezime *</label>
+        <input type="text" id="userName" placeholder="npr. Ivan Horvat" autocomplete="name">
+        <div class="field-error" id="errName">Unesite ime i prezime.</div>
+        <label for="userOib">OIB</label>
+        <input type="text" id="userOib" placeholder="11 znamenaka (npr. 12345678901)" maxlength="11" inputmode="numeric">
+        <div class="field-error" id="errOib">OIB mora imati točno 11 znamenaka i ispravan kontrolni broj.</div>
+        <p class="help" style="margin-top:-8px">OIB nije obavezan u aplikaciji, ali je koristan za identifikaciju u službenoj evidenciji.</p>
+        <button class="btn btn-primary" onclick="saveUser()">Nastavi →</button>
+      </div>
+    </div>
+
+    <!-- SCREEN: Records list -->
+    <div id="screen-list" class="screen">
+      <div class="card">
+        <h2>Evidencija SZB <span class="badge" id="recordCount">0</span></h2>
+        <p class="help" id="userDisplay"></p>
+        <div class="info-box" style="margin-bottom:12px">
+          Preporuka: vodite <strong>jednu evidenciju po kalendarskoj godini</strong> – u nju unosite sve primjene te godine, zatim preuzmite Excel.
+        </div>
+        <label for="yearFilter" style="font-size:0.9rem">Godina evidencije</label>
+        <select id="yearFilter" onchange="renderList()" style="margin-bottom:14px">
+          <option value="all">Sve godine</option>
+        </select>
+        <div id="recordsList"></div>
+        <div id="emptyState" class="empty-state">
+          <div class="icon">🌱</div>
+          <p>Još nema unesenih primjena za odabranu godinu.<br>Dodajte prvu!</p>
+        </div>
+        <button class="btn btn-primary" onclick="startNewRecord()" style="margin-top:12px">＋ Dodaj novu primjenu</button>
+        <button class="btn btn-outline" onclick="exportExcel()" style="margin-top:10px" id="btnExport" disabled>⬇ Preuzmi Excel (za odabranu godinu)</button>
+        <button class="btn btn-secondary" onclick="goTo('welcome')" style="margin-top:10px">ℹ Informacije</button>
+      </div>
+    </div>
+
+    <!-- SCREEN: Wizard steps -->
+    <div id="screen-wizard" class="screen">
+      <div class="card">
+        <div class="step-indicator" id="stepIndicator">Korak 1 od 8</div>
+        <h2 id="stepTitle">Vrsta uporabe</h2>
+        <p class="help" id="stepHelp">Odaberite gdje / kako ste primijenili sredstvo.</p>
+        <div id="stepContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-actions" id="footerActions" style="display:none">
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="btnBack" onclick="wizardBack()">← Natrag</button>
+      <button class="btn btn-primary" id="btnNext" onclick="wizardNext()">Dalje →</button>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script>
+    // Vanjske biblioteke (Excel, OCR) učitavamo tek kad zatrebaju – ne blokiraju otvaranje
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        if (document.querySelector('script[data-src="' + src + '"]')) { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = src;
+        s.setAttribute('data-src', src);
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error('Ne mogu učitati biblioteku. Provjerite internet.'));
+        document.head.appendChild(s);
+      });
+    }
+    function ensureXlsx() {
+      // ExcelJS – podržava obrube i širine stupaca kao u službenom predlošku
+      if (typeof ExcelJS !== 'undefined') return Promise.resolve();
+      return loadScript('https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js');
+    }
+    function ensureTesseract() {
+      if (typeof Tesseract !== 'undefined') return Promise.resolve();
+      return loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+    }
+
+    // ========== DATA (ugrađeno u data.js – radi i bez servera) ==========
+    let cultures = (typeof CULTURES_DATA !== 'undefined') ? CULTURES_DATA : [];
+    let fenofaze = (typeof FENOFAZE_DATA !== 'undefined') ? FENOFAZE_DATA : [];
+    let vrste = (typeof VRSTE_DATA !== 'undefined') ? VRSTE_DATA : [];
+    let records = JSON.parse(localStorage.getItem('szb_records') || '[]');
+    let user = JSON.parse(localStorage.getItem('szb_user') || '{}');
+    let currentRecord = {};
+    let currentStep = 0;
+    let editIndex = -1;
+
+    const STEPS = [
+      { key: 'vrsta', title: 'Vrsta uporabe', help: 'Odaberite vrstu površine ili tretmana (s liste).' },
+      { key: 'sredstvo', title: 'Sredstvo za zaštitu bilja', help: 'Unesite trgovački naziv i registracijski broj. Možete snimiti etiketu – aplikacija će pokušati pročitati podatke.' },
+      { key: 'datum', title: 'Datum i vrijeme primjene', help: 'Datum kada je sredstvo primijenjeno. Vrijeme (sat) nije obavezno za skladišta, trajne staklenike i tretiranje sjemena.' },
+      { key: 'doza', title: 'Primijenjena doza', help: 'Količina primijenjenog sredstva za zaštitu bilja u kg/ha ili L/ha (upisati s etikete SZB), npr. 1,5 l/ha.' },
+      { key: 'lokacija', title: 'Lokacija i površina', help: 'Broj katastarske čestice / ARKOD parcele / lokacija (adresa) skladišta ili staklenika. Veličina: broj hektara, m², m³, kg ili broj sjemenki.' },
+      { key: 'usjev', title: 'Usjev / situacija', help: 'Odaberite kulturu ili situaciju uporabe zemljišta. EPPO kod se automatski popunjava.' },
+      { key: 'fenofaza', title: 'Fenofaza rasta (BBCH)', help: 'Potražiti na etiketi ili na FIS javnoj tražilici. Posebne situacije primjene nemaju EPPO/fenofazu – možete preskočiti.' },
+      { key: 'sustav', title: 'Sustav proizvodnje', help: 'Unijeti samo ako podatak postoji (npr. integrirana, ekološka). Potražiti na etiketi ili FIS tražilici.' }
+    ];
+
+    const SUSTAVI = [
+      'Integrirana proizvodnja',
+      'Ekološka proizvodnja',
+      'Konvencionalna proizvodnja',
+      'Ostalo'
+    ];
+
+    // ========== INIT ==========
+    function init() {
+      try {
+        // Odmah sakrij učitavanje – ne čekamo vanjske CDN-ove
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl) loadingEl.style.display = 'none';
+
+        if (!vrste || vrste.length === 0) {
+          console.error('Podaci nisu učitani – provjerite da je data.js u istoj mapi.');
+          alert('Greška: podaci nisu učitani.\n\nProvjerite da su datoteke data.js i index.html u istoj mapi.');
+        }
+        if (user && user.name) {
+          goTo('list');
+        }
+        renderList();
+      } catch (err) {
+        console.error(err);
+        const loadingEl = document.getElementById('loading');
+        if (loadingEl) loadingEl.style.display = 'none';
+        alert('Greška pri pokretanju: ' + (err.message || err));
+      }
+    }
+
+    function saveToStorage() {
+      localStorage.setItem('szb_records', JSON.stringify(records));
+      localStorage.setItem('szb_user', JSON.stringify(user));
+    }
+
+    // ========== NAVIGATION ==========
+    function goTo(screen) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('screen-' + screen).classList.add('active');
+      document.getElementById('footerActions').style.display = screen === 'wizard' ? 'block' : 'none';
+      document.getElementById('progressBar').style.display = screen === 'wizard' ? 'block' : 'none';
+      if (screen === 'list') renderList();
+      if (screen === 'user') {
+        document.getElementById('userName').value = user.name || '';
+        document.getElementById('userOib').value = user.oib || '';
+      }
+      window.scrollTo(0, 0);
+    }
+
+    /** Validacija hrvatskog OIB-a (ISO 7064 MOD 11,10) */
+    function isValidOib(oib) {
+      if (!/^\d{11}$/.test(oib)) return false;
+      let a = 10;
+      for (let i = 0; i < 10; i++) {
+        a = (a + parseInt(oib[i], 10)) % 10;
+        if (a === 0) a = 10;
+        a = (a * 2) % 11;
+      }
+      let kontrolni = 11 - a;
+      if (kontrolni === 10) kontrolni = 0;
+      return kontrolni === parseInt(oib[10], 10);
+    }
+
+    function hasNumber(str) {
+      return /[0-9]+([.,][0-9]+)?/.test(String(str));
+    }
+
+    function isGarbageText(s) {
+      if (!s) return true;
+      const t = String(s).trim();
+      if (t.length < 2) return true;
+      if (/[|]{2,}/.test(t)) return true;
+      const alnum = t.replace(/[^A-Za-zČĆŽŠĐčćžšđ0-9]/g, '');
+      return alnum.length < 2;
+    }
+
+    function isValidRegBroj(s) {
+      if (!s || !s.trim()) return true; // optional
+      // Accept UP/I-... or similar official looking codes
+      return /UP\s*\/\s*I/i.test(s) || /[A-Z]{1,5}[-/]\d/.test(s) || /\d{2,}[-/]\d{2,}/.test(s);
+    }
+
+    function saveUser() {
+      const nameEl = document.getElementById('userName');
+      const oibEl = document.getElementById('userOib');
+      const name = nameEl.value.trim();
+      const oib = oibEl.value.trim().replace(/\s/g, '');
+      let ok = true;
+
+      document.getElementById('errName').classList.remove('show');
+      document.getElementById('errOib').classList.remove('show');
+      nameEl.classList.remove('invalid');
+      oibEl.classList.remove('invalid');
+
+      if (!name || name.length < 2) {
+        document.getElementById('errName').classList.add('show');
+        nameEl.classList.add('invalid');
+        ok = false;
+      }
+      if (oib && !isValidOib(oib)) {
+        document.getElementById('errOib').classList.add('show');
+        oibEl.classList.add('invalid');
+        ok = false;
+      }
+      if (!ok) return;
+
+      user = { name, oib };
+      saveToStorage();
+      goTo('list');
+    }
+
+    // ========== LIST ==========
+    function formatDatumHR(iso) {
+      if (!iso) return '';
+      const s = String(iso).trim();
+      // Already HR: 13.10.2026 or 13.10.2026.
+      if (/^\d{1,2}\.\d{1,2}\.\d{4}\.?$/.test(s)) {
+        const p = s.replace(/\.$/, '').split('.');
+        return p[0].padStart(2,'0') + '.' + p[1].padStart(2,'0') + '.' + p[2] + '.';
+      }
+      // ISO YYYY-MM-DD → DD.MM.YYYY.
+      const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (m) return m[3] + '.' + m[2] + '.' + m[1] + '.';
+      return s;
+    }
+
+    /** Parse user input to ISO YYYY-MM-DD for storage, or null if invalid */
+    function parseDatumToISO(s) {
+      if (!s) return null;
+      s = String(s).trim().replace(/\.$/, '');
+      // DD.MM.YYYY or D.M.YYYY
+      let m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+      if (m) {
+        const d = parseInt(m[1],10), mo = parseInt(m[2],10), y = parseInt(m[3],10);
+        if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+        return y + '-' + String(mo).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      }
+      // Already ISO
+      m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (m) return s;
+      return null;
+    }
+
+    function formatVrijemeHR(t) {
+      if (!t) return '';
+      let s = String(t).trim();
+      // Convert 12h AM/PM if somehow present
+      const ampm = s.match(/^(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)$/);
+      if (ampm) {
+        let h = parseInt(ampm[1],10);
+        if (/pm/i.test(ampm[3]) && h < 12) h += 12;
+        if (/am/i.test(ampm[3]) && h === 12) h = 0;
+        return String(h).padStart(2,'0') + ':' + ampm[2];
+      }
+      const m = s.match(/^(\d{1,2}):(\d{2})/);
+      if (m) return m[1].padStart(2,'0') + ':' + m[2];
+      return s;
+    }
+
+    function parseVrijeme(s) {
+      if (!s) return '';
+      const f = formatVrijemeHR(s);
+      if (!/^\d{2}:\d{2}$/.test(f)) return null;
+      const [h, mi] = f.split(':').map(Number);
+      if (h > 23 || mi > 59) return null;
+      return f;
+    }
+
+    function getRecordYear(r) {
+      if (r.datum && /^\d{4}/.test(r.datum)) return r.datum.slice(0, 4);
+      return 'nepoznato';
+    }
+
+    function getFilteredRecords() {
+      const yf = document.getElementById('yearFilter');
+      const year = yf ? yf.value : 'all';
+      if (year === 'all') return records.map((r, i) => ({ r, i }));
+      return records.map((r, i) => ({ r, i })).filter(x => getRecordYear(x.r) === year);
+    }
+
+    function updateYearFilter() {
+      const sel = document.getElementById('yearFilter');
+      if (!sel) return;
+      const current = sel.value;
+      const years = [...new Set(records.map(getRecordYear))].filter(y => y !== 'nepoznato').sort().reverse();
+      const thisYear = String(new Date().getFullYear());
+      if (!years.includes(thisYear)) years.unshift(thisYear);
+      sel.innerHTML = '<option value="all">Sve godine</option>' +
+        years.map(y => `<option value="${y}">${y}.</option>`).join('');
+      if ([...sel.options].some(o => o.value === current)) sel.value = current;
+      else if (years.includes(thisYear)) sel.value = thisYear;
+    }
+
+    function renderList() {
+      updateYearFilter();
+      const list = document.getElementById('recordsList');
+      const empty = document.getElementById('emptyState');
+      const count = document.getElementById('recordCount');
+      const exportBtn = document.getElementById('btnExport');
+      const filtered = getFilteredRecords();
+      count.textContent = filtered.length;
+      document.getElementById('userDisplay').textContent = user.name ? (user.name + (user.oib ? ' · OIB: ' + user.oib : '')) : '';
+      exportBtn.disabled = filtered.length === 0;
+
+      if (filtered.length === 0) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      list.innerHTML = filtered.map(({ r, i }) => {
+        const naziv = (r.naziv || 'Bez naziva').replace(/[|\\\/]{2,}/g, '').trim() || 'Bez naziva';
+        const meta = [formatDatumHR(r.datum), r.usjev, r.doza].filter(Boolean).join(' · ');
+        return `
+        <div class="record-item">
+          <div class="info">
+            <div class="title">${escapeAttr(naziv)}</div>
+            <div class="meta">${escapeAttr(meta)}</div>
+          </div>
+          <div>
+            <button class="btn btn-sm btn-outline" onclick="editRecord(${i})">Uredi</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteRecord(${i})" style="margin-left:4px">✕</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function startNewRecord() {
+      editIndex = -1;
+      currentRecord = {
+        vrsta: '', naziv: '', regBroj: '', datum: '', vrijeme: '',
+        doza: '', lokacija: '', velicina: '', usjev: '', eppo: '',
+        fenofaza: '', sustav: ''
+      };
+      currentStep = 0;
+      showWizardStep();
+      goTo('wizard');
+    }
+
+    function editRecord(i) {
+      editIndex = i;
+      currentRecord = { ...records[i] };
+      currentStep = 0;
+      showWizardStep();
+      goTo('wizard');
+    }
+
+    function deleteRecord(i) {
+      if (confirm('Obrisati ovu primjenu?')) {
+        records.splice(i, 1);
+        saveToStorage();
+        renderList();
+      }
+    }
+
+    // ========== WIZARD ==========
+    function showWizardStep() {
+      const step = STEPS[currentStep];
+      document.getElementById('stepIndicator').textContent = `Korak ${currentStep + 1} od ${STEPS.length}`;
+      document.getElementById('stepTitle').textContent = step.title;
+      document.getElementById('stepHelp').textContent = step.help;
+      document.getElementById('progressFill').style.width = ((currentStep + 1) / STEPS.length * 100) + '%';
+      document.getElementById('btnBack').style.visibility = currentStep === 0 ? 'hidden' : 'visible';
+      document.getElementById('btnNext').textContent = currentStep === STEPS.length - 1 ? 'Spremi ✓' : 'Dalje →';
+
+      const content = document.getElementById('stepContent');
+      content.innerHTML = '';
+
+      switch (step.key) {
+        case 'vrsta':
+          content.innerHTML = vrste.map(v => `
+            <button type="button" class="big-choice ${currentRecord.vrsta === v ? 'selected' : ''}"
+              onclick="selectVrsta(this, '${escapeAttr(v)}')">${v}</button>
+          `).join('');
+          break;
+
+        case 'sredstvo':
+          content.innerHTML = `
+            <div class="photo-area" id="photoArea">
+              <p style="margin-bottom:12px">📷 Snimite etiketu sredstva (opcionalno)</p>
+              <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(event)">
+              <button type="button" class="btn btn-accent btn-sm" onclick="document.getElementById('photoInput').click()">Otvori kameru / galeriju</button>
+              <div class="ocr-status" id="ocrStatus"></div>
+              <div id="photoPreview"></div>
+            </div>
+            <label for="naziv">Trgovački naziv sredstva *</label>
+            <input type="text" id="naziv" value="${escapeAttr(currentRecord.naziv || '')}" placeholder="npr. Roundup, Score 250 EC…">
+            <label for="regBroj">Registracijski broj (broj odobrenja)</label>
+            <input type="text" id="regBroj" value="${escapeAttr(currentRecord.regBroj || '')}" placeholder="npr. UP/I-320-…">
+          `;
+          break;
+
+        case 'datum':
+          content.innerHTML = `
+            <label for="datum">Datum primjene *</label>
+            <input type="text" id="datum" value="${escapeAttr(formatDatumHR(currentRecord.datum) || currentRecord.datum || '')}" placeholder="npr. 13.10.2026" inputmode="numeric">
+            <p class="help" style="margin-top:-10px;margin-bottom:14px">Hrvatski oblik: <strong>dan.mjesec.godina</strong> (npr. 13.10.2026)</p>
+            <label for="vrijeme">Početak primjene (sat) – opcionalno</label>
+            <input type="text" id="vrijeme" value="${escapeAttr(formatVrijemeHR(currentRecord.vrijeme) || currentRecord.vrijeme || '')}" placeholder="npr. 14:45" inputmode="numeric">
+            <p class="help" style="margin-top:-10px">24-satni oblik: <strong>sati:minute</strong> (npr. 14:45) – bez AM/PM</p>
+          `;
+          break;
+
+        case 'doza':
+          content.innerHTML = `
+            <label for="doza">Primijenjena doza *</label>
+            <input type="text" id="doza" value="${escapeAttr(currentRecord.doza || '')}" placeholder="npr. 1,5 l/ha ili 200 g/ha">
+            <p class="help" style="margin-top:-8px">Upišite točno kako je na etiketi (jedinica uključena).</p>
+          `;
+          break;
+
+        case 'lokacija':
+          content.innerHTML = `
+            <label for="lokacija">Lokacija / identifikacija površine *</label>
+            <input type="text" id="lokacija" value="${escapeAttr(currentRecord.lokacija || '')}" placeholder="ARKOD broj ili naziv parcele/objekta">
+            <label for="velicina">Veličina ili količina tretirane površine *</label>
+            <input type="text" id="velicina" value="${escapeAttr(currentRecord.velicina || '')}" placeholder="npr. 2,5 ha ili 500 m²">
+          `;
+          break;
+
+        case 'usjev':
+          content.innerHTML = `
+            <div class="search-box">
+              <input type="text" id="usjevSearch" placeholder="Traži usjev ili situaciju…" oninput="filterUsjev()" autocomplete="off">
+            </div>
+            <div class="dropdown-list show" id="usjevList" style="max-height:320px"></div>
+            <p style="margin-top:10px;font-size:0.9rem">Odabrano: <strong id="usjevSelected">${currentRecord.usjev || '—'}</strong></p>
+          `;
+          filterUsjev();
+          break;
+
+        case 'fenofaza':
+          content.innerHTML = `
+            <div class="search-box">
+              <input type="text" id="fenoSearch" placeholder="Traži fenofazu (npr. cvatnja, klasanje)…" oninput="filterFeno()" autocomplete="off">
+            </div>
+            <div class="dropdown-list show" id="fenoList" style="max-height:280px"></div>
+            <p style="margin-top:10px;font-size:0.9rem">Odabrano: <strong id="fenoSelected">${currentRecord.fenofaza || '— (nije obavezno)'}</strong></p>
+            <button type="button" class="btn btn-outline btn-sm" style="margin-top:12px" onclick="currentRecord.fenofaza=''; document.getElementById('fenoSelected').textContent='— (preskočeno)';">Preskoči fenofazu</button>
+          `;
+          filterFeno();
+          break;
+
+        case 'sustav':
+          content.innerHTML = SUSTAVI.map(s => `
+            <button type="button" class="big-choice ${currentRecord.sustav === s ? 'selected' : ''}"
+              onclick="selectSustav(this, '${s}')">${s}</button>
+          `).join('');
+          break;
+      }
+    }
+
+    function selectVrsta(el, val) {
+      document.querySelectorAll('.big-choice').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+      currentRecord.vrsta = val;
+    }
+    function selectSustav(el, val) {
+      document.querySelectorAll('.big-choice').forEach(b => b.classList.remove('selected'));
+      el.classList.add('selected');
+      currentRecord.sustav = val;
+    }
+
+    function filterUsjev() {
+      const q = (document.getElementById('usjevSearch')?.value || '').toLowerCase().trim();
+      const list = document.getElementById('usjevList');
+      let filtered = cultures;
+      if (q.length >= 1) {
+        filtered = cultures.filter(c => c.name.toLowerCase().includes(q)).slice(0, 80);
+      } else {
+        filtered = cultures.slice(0, 40);
+      }
+      list.innerHTML = filtered.map(c => `
+        <div class="dropdown-item" onclick="selectUsjev('${escapeAttr(c.name)}', '${escapeAttr(c.eppo)}')">${c.name}</div>
+      `).join('') || '<div class="dropdown-item">Nema rezultata</div>';
+    }
+    function selectUsjev(name, eppo) {
+      currentRecord.usjev = name;
+      currentRecord.eppo = eppo;
+      document.getElementById('usjevSelected').textContent = name;
+    }
+
+    function filterFeno() {
+      const q = (document.getElementById('fenoSearch')?.value || '').toLowerCase().trim();
+      const list = document.getElementById('fenoList');
+      let filtered = fenofaze;
+      // Prefer matching current crop name
+      const crop = (currentRecord.usjev || '').split(' ')[0].toLowerCase();
+      if (q.length >= 1) {
+        filtered = fenofaze.filter(f => f.toLowerCase().includes(q)).slice(0, 60);
+      } else if (crop.length > 2) {
+        filtered = fenofaze.filter(f => f.toLowerCase().includes(crop)).slice(0, 40);
+        if (filtered.length === 0) filtered = fenofaze.slice(0, 30);
+      } else {
+        filtered = fenofaze.slice(0, 30);
+      }
+      list.innerHTML = filtered.map(f => `
+        <div class="dropdown-item" onclick="selectFeno('${escapeAttr(f)}')">${f}</div>
+      `).join('') || '<div class="dropdown-item">Nema rezultata</div>';
+    }
+    function selectFeno(val) {
+      currentRecord.fenofaza = val;
+      document.getElementById('fenoSelected').textContent = val;
+    }
+
+    function collectCurrentStep() {
+      const step = STEPS[currentStep].key;
+      if (step === 'sredstvo') {
+        currentRecord.naziv = document.getElementById('naziv').value.trim();
+        currentRecord.regBroj = document.getElementById('regBroj').value.trim();
+      } else if (step === 'datum') {
+        const rawD = document.getElementById('datum').value.trim();
+        const rawV = document.getElementById('vrijeme').value.trim();
+        const iso = parseDatumToISO(rawD);
+        currentRecord.datum = iso || rawD; // prefer ISO for sorting
+        currentRecord.vrijeme = parseVrijeme(rawV) || rawV;
+        currentRecord._datumRaw = rawD;
+      } else if (step === 'doza') {
+        currentRecord.doza = document.getElementById('doza').value.trim();
+      } else if (step === 'lokacija') {
+        currentRecord.lokacija = document.getElementById('lokacija').value.trim();
+        currentRecord.velicina = document.getElementById('velicina').value.trim();
+      }
+    }
+
+    function validateStep() {
+      const step = STEPS[currentStep].key;
+
+      if (step === 'vrsta') {
+        if (!currentRecord.vrsta) { alert('Odaberite vrstu uporabe.'); return false; }
+      }
+
+      if (step === 'sredstvo') {
+        if (!currentRecord.naziv || isGarbageText(currentRecord.naziv)) {
+          alert('Unesite ispravan trgovački naziv sredstva (ne smije biti prazan ili nečitljiv).');
+          return false;
+        }
+        if (currentRecord.regBroj && !isValidRegBroj(currentRecord.regBroj)) {
+          if (!confirm('Registracijski broj ne izgleda kao službeni oblik (npr. UP/I-320-…).\n\nŽelite li ipak nastaviti?')) return false;
+        }
+      }
+
+      if (step === 'datum') {
+        const rawD = document.getElementById('datum').value.trim();
+        const iso = parseDatumToISO(rawD);
+        if (!iso) {
+          alert('Unesite datum u hrvatskom obliku: dan.mjesec.godina\n(npr. 13.10.2026)');
+          return false;
+        }
+        currentRecord.datum = iso;
+        const rawV = document.getElementById('vrijeme').value.trim();
+        if (rawV) {
+          const v = parseVrijeme(rawV);
+          if (!v) {
+            alert('Vrijeme unesite u 24-satnom obliku: sati:minute\n(npr. 14:45) – bez AM/PM');
+            return false;
+          }
+          currentRecord.vrijeme = v;
+        }
+        const d = new Date(iso + 'T12:00:00');
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        if (d > today) {
+          alert('Datum primjene ne može biti u budućnosti.');
+          return false;
+        }
+        const yearAgo = new Date();
+        yearAgo.setFullYear(yearAgo.getFullYear() - 2);
+        if (d < yearAgo) {
+          if (!confirm('Datum je stariji od 2 godine. Jeste li sigurni da je točno?')) return false;
+        }
+      }
+
+      if (step === 'doza') {
+        if (!currentRecord.doza || !hasNumber(currentRecord.doza)) {
+          alert('Unesite dozu s brojem (npr. 1,5 l/ha ili 200 g/ha).');
+          return false;
+        }
+      }
+
+      if (step === 'lokacija') {
+        if (!currentRecord.lokacija || currentRecord.lokacija.trim().length < 1) {
+          alert('Unesite lokaciju (ARKOD, katastarska čestica ili adresa).');
+          return false;
+        }
+        if (!currentRecord.velicina || !hasNumber(currentRecord.velicina)) {
+          alert('Unesite veličinu s brojem (npr. 2,5 ha ili 500 m²).');
+          return false;
+        }
+      }
+
+      if (step === 'usjev') {
+        if (!currentRecord.usjev) { alert('Odaberite usjev ili situaciju.'); return false; }
+      }
+
+      if (step === 'sustav') {
+        if (!currentRecord.sustav) { alert('Odaberite sustav proizvodnje.'); return false; }
+      }
+
+      return true;
+    }
+
+    function wizardNext() {
+      collectCurrentStep();
+      if (!validateStep()) return;
+      if (currentStep < STEPS.length - 1) {
+        currentStep++;
+        showWizardStep();
+        window.scrollTo(0, 0);
+      } else {
+        // Save
+        if (editIndex >= 0) {
+          records[editIndex] = { ...currentRecord };
+        } else {
+          records.push({ ...currentRecord });
+        }
+        saveToStorage();
+        goTo('list');
+      }
+    }
+
+    function wizardBack() {
+      collectCurrentStep();
+      if (currentStep > 0) {
+        currentStep--;
+        showWizardStep();
+        window.scrollTo(0, 0);
+      }
+    }
+
+    // ========== OCR ==========
+    async function handlePhoto(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const preview = document.getElementById('photoPreview');
+      const status = document.getElementById('ocrStatus');
+      const url = URL.createObjectURL(file);
+      preview.innerHTML = `<img src="${url}" alt="Etiketa">`;
+      status.textContent = 'Priprema čitanja etikete…';
+      status.className = 'ocr-status working';
+
+      try {
+        await ensureTesseract();
+
+        // Predobrada slike: uvećanje + kontrast radi boljeg čitanja sitnog teksta
+        status.textContent = 'Priprema slike…';
+        const imgBitmap = await createImageBitmap(file);
+        const scale = Math.max(2, Math.min(3, 1600 / Math.max(imgBitmap.width, 1)));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(imgBitmap.width * scale);
+        canvas.height = Math.round(imgBitmap.height * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.drawImage(imgBitmap, 0, 0, canvas.width, canvas.height);
+        // Povećaj kontrast
+        try {
+          const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const d = id.data;
+          const factor = 1.35;
+          for (let i = 0; i < d.length; i += 4) {
+            d[i] = Math.min(255, Math.max(0, (d[i] - 128) * factor + 128));
+            d[i+1] = Math.min(255, Math.max(0, (d[i+1] - 128) * factor + 128));
+            d[i+2] = Math.min(255, Math.max(0, (d[i+2] - 128) * factor + 128));
+          }
+          ctx.putImageData(id, 0, 0);
+        } catch (_) {}
+
+        status.textContent = 'Čitanje etikete… (10–40 s)';
+        const result = await Tesseract.recognize(canvas, 'hrv+eng', {
+          logger: m => {
+            if (m.status === 'recognizing text') {
+              status.textContent = `Čitanje… ${Math.round(m.progress * 100)}%`;
+            }
+          }
+        });
+        const rawText = result.data.text || '';
+
+        // Split into lines, clean each
+        let lines = rawText.split(/\r?\n/)
+          .map(l => l.replace(/[|\u00A6\[\]]+/g, ' ').replace(/\s+/g, ' ').trim())
+          .filter(l => l.length >= 2);
+
+        // --- Registration number (Croatian format UP/I-...) ---
+        // OCR često krivo čita: UP/I → UPI, UP1, UP/l, UP/|, ll, etc.
+        let guessedReg = '';
+        const regMatches = [];
+        const fullText = lines.join(' ') + ' ' + rawText.replace(/\n/g, ' ');
+
+        // Normalizacija uobičajenih OCR grešaka
+        let normalized = fullText
+          .replace(/[|¦]/g, '/')
+          .replace(/UP\s*[\/\\|Il1!]\s*[Il1i!]/gi, 'UP/I')
+          .replace(/U\s*P\s*[\/\\|Il1]\s*[Il1i]/gi, 'UP/I')
+          .replace(/UP\s*I\s*[-–—:]/gi, 'UP/I-')
+          .replace(/UPI\s*[-–—:]/gi, 'UP/I-')
+          .replace(/UP1\s*[-–—:]/gi, 'UP/I-')
+          .replace(/UP\/l\s*[-–—:]/gi, 'UP/I-')
+          .replace(/UP\/\|\s*[-–—:]/gi, 'UP/I-');
+
+        function addReg(raw) {
+          if (!raw) return;
+          let reg = String(raw).replace(/\s+/g, '').replace(/[–—:]/g, '-');
+          reg = reg.replace(/^UP\/?I/i, 'UP/I');
+          if (!/^UP\/I/i.test(reg)) reg = 'UP/I-' + reg.replace(/^UP\/?I-?/i, '');
+          reg = reg.replace(/[^0-9A-Za-z\/.\-]+/g, '');
+          // Mora imati barem nekoliko znamenaka
+          if (reg.length >= 10 && /\d{3,}/.test(reg) && !regMatches.includes(reg)) {
+            regMatches.push(reg);
+          }
+        }
+
+        // 1) Direktni UP/I obrasci
+        const upiPatterns = [
+          /UP\s*\/\s*I\s*[-–—]?\s*[\d./\-–—]{5,}/gi,
+          /UP\/I-[\d./\-]{5,}/gi,
+          /UP\/I[\d./\-]{5,}/gi
+        ];
+        for (const upiRe of upiPatterns) {
+          let m;
+          const src = normalized + ' ' + fullText;
+          upiRe.lastIndex = 0;
+          while ((m = upiRe.exec(src)) !== null) addReg(m[0]);
+        }
+
+        // 2) Brojčani dio tipičnog oblika: 320-20/18-03/92 ili 320-2019-03/180
+        const numPatterns = [
+          /\b(\d{2,4}[-–—\/.]\d{1,4}[-–—\/.]\d{1,4}[-–—\/.]?\d{0,4}[-–—\/.]?\d{0,4})\b/g
+        ];
+        // Ako je u blizini "regist" ili "UP" – uzmi kao reg. broj
+        for (const line of lines) {
+          const lineN = line
+            .replace(/[|¦]/g, '/')
+            .replace(/UP\s*[\/\\|Il1!]\s*[Il1i!]/gi, 'UP/I');
+          if (/regist|odobren|UP\s*\/?\s*I|UPI|broj\s*sredst/i.test(lineN)) {
+            let m;
+            const re = /\d{2,4}[-–—\/.]\d{1,4}[-–—\/.]\d{1,4}(?:[-–—\/.]\d{1,4})?/g;
+            while ((m = re.exec(lineN)) !== null) addReg('UP/I-' + m[0]);
+            // Cijeli UP/I na istoj liniji
+            const up = lineN.match(/UP\s*\/\s*I\s*[-–—]?\s*[\d./\-–—]+/i);
+            if (up) addReg(up[0]);
+          }
+        }
+
+        // 3) Globalno: svi brojevi oblika xxx-xx/xx-xx/xx u cijelom tekstu
+        {
+          const re = /\b(\d{3}[-–—\/.]\d{2}[-–—\/.]\d{2}[-–—\/.]\d{2}[-–—\/.]?\d*)\b/g;
+          let m;
+          while ((m = re.exec(normalized)) !== null) addReg('UP/I-' + m[1]);
+        }
+
+        if (regMatches.length) {
+          // Preferiraj dulje / potpunije, max 2
+          regMatches.sort((a, b) => b.length - a.length);
+          guessedReg = [...new Set(regMatches)].slice(0, 2).join(', ');
+        }
+
+        // --- Product name ---
+        let guessedName = '';
+        // 1) Known / frequent product-like words on Croatian labels
+        const knownProducts = [
+          'Closer', 'Roundup', 'Score', 'Karate', 'Decis', 'Actara', 'Confidor',
+          'Mospilan', 'Calypso', 'Biscaya', 'Movento', 'Envidor', 'Nurelle',
+          'Cyperkill', 'Pyrinex', 'Steward', 'Coragen', 'Voliam', 'Affirm',
+          'Laser', 'Spintor', 'Success', 'Champion', 'Kocide', 'Bordovska',
+          'Ridomil', 'Acrobat', 'Cabrio', 'Signum', 'Switch', 'Teldor',
+          'Systhane', 'Topas', 'Falcon', 'Prosaro', 'Amistar', 'Quadris',
+          'Ortiva', 'Folicur', 'Horizon', 'Tilt', 'Opus', 'Allegro', 'Acanto'
+        ];
+        for (const kp of knownProducts) {
+          const re = new RegExp('\\b' + kp + '\\b', 'i');
+          if (re.test(fullText) || re.test(rawText)) {
+            guessedName = kp;
+            // Try to capture extra (e.g. "Closer isoclast active" or "Score 250 EC")
+            const ext = fullText.match(new RegExp('\\b' + kp + '\\b[\\s\\w®™]*(?:\\d+\\s*(?:EC|SC|WG|SL|OD))?','i'));
+            if (ext && ext[0].length < 40) guessedName = ext[0].trim();
+            break;
+          }
+        }
+
+        // 2) Heuristic: short lines that look like brand names (mostly letters, 3–25 chars)
+        if (!guessedName) {
+          const candidates = lines.filter(l => {
+            if (l.length < 3 || l.length > 30) return false;
+            if (/UP\s*\/\s*I/i.test(l)) return false;
+            if (/^\d/.test(l)) return false;
+            if (/CAS|g\/L|%|w\/w|INSEKTICID|HERBICID|FUNGICID|KONCENTRAT|SADRŽ|Distributer|Proizvođač|Skladišt|Rok uporabe/i.test(l)) return false;
+            // Prefer lines with high letter ratio
+            const letters = (l.match(/[A-Za-zČĆŽŠĐčćžšđ]/g) || []).length;
+            return letters / l.length > 0.6;
+          });
+          // Prefer title-case or ALL-CAPS short names
+          candidates.sort((a, b) => {
+            const score = (s) => (/^[A-ZČĆŽŠĐ]/.test(s) ? 2 : 0) + (s.length < 15 ? 1 : 0);
+            return score(b) - score(a);
+          });
+          if (candidates.length) guessedName = candidates[0];
+        }
+
+        // Apply only if clean (no OCR noise)
+        const isGarbage = (s) => !s || /[|]{2,}|\|{3}|^\W+$/.test(s) || (s.replace(/[^A-Za-zČĆŽŠĐčćžšđ0-9]/g, '').length < 2);
+
+        if (guessedName && !isGarbage(guessedName)) {
+          document.getElementById('naziv').value = guessedName;
+          currentRecord.naziv = guessedName;
+        }
+        if (guessedReg && !isGarbage(guessedReg)) {
+          document.getElementById('regBroj').value = guessedReg;
+          currentRecord.regBroj = guessedReg;
+        }
+
+        if (guessedName || guessedReg) {
+          status.textContent = 'Gotovo. Provjerite i po potrebi ispravite polja ispod.';
+          status.className = 'ocr-status done';
+        } else {
+          status.textContent = 'Nije pouzdano pročitano. Unesite naziv i broj ručno.';
+          status.className = 'ocr-status';
+        }
+      } catch (err) {
+        console.error(err);
+        status.textContent = 'Nije uspjelo automatsko čitanje. Unesite ručno.';
+        status.className = 'ocr-status';
+      }
+    }
+
+    // ========== EXPORT ==========
+    async function exportExcel() {
+      const filtered = getFilteredRecords().map(x => x.r);
+      if (filtered.length === 0) {
+        alert('Nema zapisa za odabranu godinu.');
+        return;
+      }
+
+      try {
+        await ensureXlsx();
+      } catch (err) {
+        alert('Ne mogu učitati Excel biblioteku. Provjerite internet vezu i pokušajte ponovo.');
+        return;
+      }
+
+      const yf = document.getElementById('yearFilter');
+      const yearLabel = (yf && yf.value !== 'all') ? yf.value : 'sve';
+
+      const wb = new ExcelJS.Workbook();
+      wb.creator = 'Evidencija SZB';
+
+      // --- List upute ---
+      const wsUpute = wb.addWorksheet('upute');
+      [
+        'OBAVIJEST O VOĐENJU EVIDENCIJE O UPORABI SREDSTAVA ZA ZAŠTITU BILJA',
+        '',
+        'Profesionalni korisnici sredstava za zaštitu bilja obvezni su voditi evidenciju o uporabi sredstava za zaštitu bilja u skladu s važećim propisima.',
+        'U skladu s Provedbenom uredbom Komisije (EU) 2025/2203, države članice mogu dopustiti da se evidencija o uporabama do 31. prosinca 2026. ne mora prenositi u propisani elektronički format.',
+        'Za uporabe od 1. siječnja 2027. evidencija se mora voditi u elektroničkom formatu.',
+        '',
+        'Preporuka: vodite jednu evidenciju po kalendarskoj godini.',
+        'Ova datoteka je generirana aplikacijom Evidencija SZB. Provjerite točnost podataka prije predaje.',
+        '',
+        'Profesionalni korisnik: ' + (user.name || '') + (user.oib ? '  OIB: ' + user.oib : ''),
+        'Godina evidencije: ' + yearLabel
+      ].forEach((t, i) => { wsUpute.getCell(i + 1, 1).value = t; });
+      wsUpute.getColumn(1).width = 100;
+
+      // --- List tablica ---
+      const ws = wb.addWorksheet('tablica');
+
+      const headers = [
+        'Rd.br.',
+        'Vrsta uporabe (Odabrati s liste)',
+        'Trgovački naziv sredstva',
+        'Registracijski broj sredstva',
+        'Datum primjene',
+        'Početak primjene/sat',
+        'Primijenjena doza',
+        'Lokacija ili identifikacija tretirane površine ili jedinice',
+        'Veličina ili količina tretirane površine ili jedinice',
+        'Usjev ili situacija/uporaba zemljišta',
+        'EPPO KOD usjeva ili situacija/uporaba zemljišta',
+        'Fenofaza rasta usjeva (BBCH)',
+        'Sustav poljoprivredne proizvodnje'
+      ];
+
+      // Širine stupaca – dovoljne da se naslovi vide
+      const colWidths = [8, 38, 28, 30, 16, 16, 18, 40, 28, 36, 18, 40, 26];
+      colWidths.forEach((w, i) => { ws.getColumn(i + 1).width = w; });
+
+      // Naslov
+      ws.mergeCells('C1:M1');
+      const titleCell = ws.getCell('C1');
+      titleCell.value = 'EVIDENCIJA PRIMJENE SREDSTAVA ZA ZAŠTITU BILJA ZA PROFESIONALNE KORISNIKE SUKLADNO ČLANKU 67. UREDBE (EZ) br. 1107/2009';
+      titleCell.font = { bold: true, size: 12 };
+      titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5D6C6' } };
+      titleCell.alignment = { horizontal: 'center', wrapText: true };
+      ws.getRow(1).height = 30;
+
+      // Korisnik
+      ws.getCell('B3').value = 'Profesionalni korisnik (ime, prezime, OIB):';
+      ws.getCell('C3').value = (user.name || '') + (user.oib ? '  OIB: ' + user.oib : '');
+      ws.getCell('B3').font = { bold: true };
+
+      // Header red (red 5)
+      const headerRow = ws.getRow(5);
+      headers.forEach((h, i) => {
+        const cell = headerRow.getCell(i + 1);
+        cell.value = h;
+        cell.font = { bold: true, size: 10 };
+        cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD9E1F2' } };
+        cell.border = {
+          top: { style: 'thin' }, left: { style: 'thin' },
+          bottom: { style: 'thin' }, right: { style: 'thin' }
+        };
+      });
+      headerRow.height = 45;
+
+      // Podaci
+      const sorted = [...filtered].sort((a, b) => (a.datum || '').localeCompare(b.datum || ''));
+      sorted.forEach((r, idx) => {
+        const row = ws.getRow(6 + idx);
+        const vals = [
+          (idx + 1) + '.',
+          r.vrsta || '',
+          r.naziv || '',
+          r.regBroj || '',
+          formatDatumHR(r.datum),
+          formatVrijemeHR(r.vrijeme),
+          r.doza || '',
+          r.lokacija || '',
+          r.velicina || '',
+          r.usjev || '',
+          r.eppo || '',
+          r.fenofaza || '',
+          r.sustav || ''
+        ];
+        vals.forEach((v, i) => {
+          const cell = row.getCell(i + 1);
+          cell.value = v;
+          cell.alignment = { vertical: 'middle', wrapText: true };
+          cell.border = {
+            top: { style: 'thin' }, left: { style: 'thin' },
+            bottom: { style: 'thin' }, right: { style: 'thin' }
+          };
+        });
+      });
+
+      // Prazni redovi s obrubima (kao u službenom predlošku) – još 10 redova
+      for (let e = 0; e < 10; e++) {
+        const row = ws.getRow(6 + sorted.length + e);
+        for (let i = 1; i <= 13; i++) {
+          const cell = row.getCell(i);
+          cell.border = {
+            top: { style: 'thin' }, left: { style: 'thin' },
+            bottom: { style: 'thin' }, right: { style: 'thin' }
+          };
+        }
+      }
+
+      const safeName = (user.name || 'korisnik').replace(/\s+/g, '_').replace(/[^\w\-čćžšđČĆŽŠĐ]/gi, '');
+      const filename = 'Evidencija_SZB_' + safeName + '_' + yearLabel + '.xlsx';
+
+      const buf = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    function escapeAttr(s) {
+      return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;');
+    }
+
+    // Start – odmah, bez čekanja vanjskih CDN-ova
+    try {
+      init();
+    } catch (e) {
+      console.error(e);
+      const el = document.getElementById('loading');
+      if (el) el.style.display = 'none';
+    }
+    // Sigurnosni timeout: ako se nešto zaglavi, makni spinner nakon 3 s
+    setTimeout(function () {
+      const el = document.getElementById('loading');
+      if (el && el.style.display !== 'none') el.style.display = 'none';
+    }, 3000);
+  </script>
+</body>
+</html>

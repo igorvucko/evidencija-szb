@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+# Aplikacija ne sadrži osobne podatke na serveru – sve ostaje na uređaju korisnika.
